@@ -12,88 +12,68 @@ const userSchema = new Schema({
         required: true
     },
     cart: {
-        items: [
-            {
-                productId: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-                quantity: { type: Number, required: true }
+        items: [{
+            productId: {
+                type: Schema.Types.ObjectId,
+                ref: 'Product',
+                required: true
+            },
+            quantity: {
+                type: Number,
+                required: true
             }
-        ]
+        }]
     }
 })
 
 userSchema.methods.addToCart = function (product) {
+    //cek apakah product sudah ada di cart
     const cartProductIndex = this.cart.items.findIndex(cp => {
         return cp.productId.toString() === product._id.toString()
     })
+    //membuat default quantity
     let newQuantity = 1
+
+    //tampung cart items ke dalam variable updatedCartItems
     const updatedCartItems = [...this.cart.items]
 
+    //jika product sudah ada di cart
     if (cartProductIndex >= 0) {
+        //update newQuantity dengan mengambil quantity dari cart items
         newQuantity = this.cart.items[cartProductIndex].quantity + 1
         updatedCartItems[cartProductIndex].quantity = newQuantity
-    } else {
+    }
+    //jika product belum ada di cart
+    else {
+        //push product ke dalam variable updatedCartItems
         updatedCartItems.push({
             productId: product._id,
             quantity: newQuantity
         })
     }
-    const updatedCart = {
-        items: updatedCartItems
-    }
-    this.cart = updatedCart
+
+    //update cart items dengan variable updatedCartItems
+    this.cart.items = updatedCartItems
     return this.save()
 }
 
 userSchema.methods.deleteItemFromCart = function (prodId) {
+    //filter cart items dengan productId yang tidak sama dengan prodId
     const updatedCartItems = this.cart.items.filter(item => {
         return item.productId.toString() !== prodId.toString()
     })
+
+    //update cart items dengan variable updatedCartItems
     this.cart.items = updatedCartItems
     return this.save()
 }
 
 userSchema.methods.clearCart = function () {
-    this.cart = { items: [] }
+    //update cart items dengan array kosong
+    this.cart = {
+        items: []
+    }
     return this.save()
 }
-
-// userSchema.methods.addOrder = function () {
-//     return this.getCart()
-//         .then(cart => {
-//             const products = cart.items.map(i => {
-//                 return { quantity: i.quantity, product: { ...i.productId._doc } }
-//             })
-//             const order = new Order({
-//                 user: {
-//                     email: this.email,
-//                     userId: this
-//                 },
-//                 products: products
-//             })
-//             return order.save()
-//         })
-//         .then(result => {
-//             this.cart = { items: [] }
-//             return this.save()
-//         })
-// }
-
-// userSchema.methods.getCart = function () {
-//     const productIds = this.cart.items.map(i => {
-//         return i.productId
-//     })
-
-//     return this.model('Product').find({ _id: { $in: productIds } })
-//         .then(products => {
-//             return products.map(p => {
-//                 return {
-//                     ...p._doc,
-//                     quantity: this.cart.items.find(i => {
-//                         return i.productId.toString() === p._id.toString()
-//                     }).quantity,
-//                 }
-//             })
-//         })
-// }
 
 module.exports = mongoose.model('User', userSchema)

@@ -1,29 +1,34 @@
-const Product = require('../models/product')
+const Product = require("../models/product")
 
 exports.getAddProduct = (req, res, next) => {
-  res.render('admin/edit-product', {
-    pageTitle: 'Add Product',
-    path: '/admin/add-product',
-    editing: false
+  res.render("admin/edit-product", {
+    pageTitle: "Add Product",
+    path: "/admin/add-product",
+    editing: false,
+    isAuthenticated: req.session.isLoggedIn,
   })
 }
 
 exports.postAddProduct = async (req, res, next) => {
-  const { title, price, description, imageUrl } = req.body
+  const {
+    title,
+    price,
+    description,
+    imageUrl
+  } = req.body
 
   const product = new Product({
     title: title,
     price: price,
     description: description,
     imageUrl: imageUrl,
-    userId: req.user
+    userId: req.user,
   })
 
   try {
     await product.save()
-    res.redirect('/');
-  }
-  catch (err) {
+    res.redirect("/")
+  } catch (err) {
     console.log(err)
   }
 }
@@ -31,27 +36,35 @@ exports.postAddProduct = async (req, res, next) => {
 exports.getEditProduct = async (req, res, next) => {
   const editMode = req.query.edit
   if (!editMode) {
-    return res.redirect('/')
+    return res.redirect("/")
   }
   const prodId = req.params.productId
   try {
     const product = await Product.findById(prodId)
     if (!product) {
-      return res.redirect('/')
+      return res.redirect("/")
     }
-    res.render('admin/edit-product', {
-      pageTitle: 'Edit Product',
-      path: '/admin/edit-product',
+    res.render("admin/edit-product", {
+      pageTitle: "Edit Product",
+      path: "/admin/edit-product",
       editing: editMode,
-      product: product
-    });
+      product: product,
+      isAuthenticated: req.session.isLoggedIn,
+    })
   } catch (err) {
     console.log(err)
   }
-};
+}
 
 exports.postEditProduct = async (req, res, next) => {
-  const { productId, title, price, description, imageUrl } = req.body
+  const {
+    productId,
+    title,
+    price,
+    description,
+    imageUrl
+  } = req.body
+
   try {
     const product = await Product.findById(productId)
 
@@ -62,9 +75,8 @@ exports.postEditProduct = async (req, res, next) => {
 
     await product.save()
 
-    res.redirect('/admin/products')
-  }
-  catch (err) {
+    res.redirect("/admin/products")
+  } catch (err) {
     console.log(err)
   }
 }
@@ -74,13 +86,13 @@ exports.getProducts = async (req, res, next) => {
   try {
     const products = await Product.find(prodId)
     console.log(products)
-    res.render('admin/products', {
+    res.render("admin/products", {
       prods: products,
-      pageTitle: 'Admin Products',
-      path: '/admin/products'
+      pageTitle: "Admin Products",
+      path: "/admin/products",
+      isAuthenticated: req.session.isLoggedIn,
     })
-  }
-  catch (err) {
+  } catch (err) {
     console.log(err)
   }
 }
@@ -90,9 +102,8 @@ exports.postDeleteProduct = async (req, res, next) => {
 
   try {
     await Product.findByIdAndRemove(prodId)
-    res.redirect('/admin/products')
-  }
-  catch (err) {
+    res.redirect("/admin/products")
+  } catch (err) {
     console.log(err)
   }
 }
